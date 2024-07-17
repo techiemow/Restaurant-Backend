@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors")
 var bodyParser = require('body-parser')
 const  connectdb  = require("./DB");
-const { handleRegistration } = require("./Service");
+const { handleRegistration, handleLogin } = require("./Service");
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -20,6 +20,26 @@ app.get("/" , (req,res) =>{
 app.post("/registration", async (req, res) => {
     handleRegistration(req, res)
     
+})
+
+app.use("/Login/:username/:password", async(req, res) => {
+
+    const { username, password } = req.params;
+
+    try {
+      const loginResult = await handleLogin(username, password);
+      res.send(loginResult);
+      console.log(loginResult)
+    } catch (error) {
+      console.error("Login error:", error.message);
+      res.status(401).send("Login Failed: " + error.message);
+    }
+    
+    
+
+
+
+
 })
 
 
