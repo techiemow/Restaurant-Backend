@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors")
 var bodyParser = require('body-parser')
 const  connectdb  = require("./DB");
-const { handleRegistration, handleLogin } = require("./Service");
+const { handleRegistration, handleLogin, handleCreateBooking, handledBookedSlots, handleMyBookings, handleCancelBooking } = require("./Service");
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -11,9 +11,20 @@ app.use(cors());
 
 connectdb();
 
+
+const logRequest = (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next(); // Call next() to move to the next middleware or route handler
+};
+
+
+app.use(logRequest);
+
 app.get("/" , (req,res) =>{
     res.send("Welcome to FoodzAt page")
 })
+
+
 
 
 
@@ -41,6 +52,24 @@ app.use("/Login/:username/:password", async(req, res) => {
 
 
 })
+
+app.post("/createBooking", (apiReq, apiRes) => {
+  handleCreateBooking(apiReq, apiRes);
+});
+
+app.get("/bookedSlots/:restaurentId/:selectedDate", (apiReq, apiRes) => {
+  
+  handledBookedSlots(apiReq, apiRes);
+});
+
+app.get("/mybookings/:username", (apiReq, apiRes) => {
+  handleMyBookings(apiReq, apiRes);
+});
+
+app.put("/cancelBooking/:username/:bookingId", (apiReq, apiRes) => {
+  handleCancelBooking(apiReq, apiRes);
+});
+
 
 
 

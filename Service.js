@@ -1,6 +1,7 @@
-const { RegistrationModel } = require("./Scheme");
+const { RegistrationModel, BookingModel } = require("./Scheme");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { ObjectId } = require("mongodb");
 
 const handleRegistration = async(req,res) => {
   console.log(req.body);
@@ -53,6 +54,85 @@ const handleLogin = async (username, password) => {
     }
   };  
 
+  const handleCreateBooking = async (apiReq, apiRes) => {
+    const { selectedTime, selectedSeats, selectedDate, username, restaurentId } =
+      apiReq.body;
+  
+    if (
+      selectedTime?.length &&
+      selectedSeats &&
+      selectedDate?.length &&
+      username?.length &&
+      restaurentId?.length
+    ) {
+      const dbResponse = await BookingModel.create({
+        selectedTime,
+        selectedSeats,
+        selectedDate,
+        username,
+        restaurentId,
+        isCancelled: false,
+      });
+      if (dbResponse?._id) {
+        apiRes.send(dbResponse);
+      }
+      return;
+    }
+  
+    apiRes.send("Invalid data for booking");
+  };
 
-module.exports = { handleRegistration ,  handleLogin};
+  const handleMyBookings = async (apiReq, apiRes) => {
+    const { username } = apiReq.params;
+  
+    if (username?.length) {
+      const dbResponse = await BookingModel.find({
+        username,
+      });
+  
+      if (dbResponse) {
+        apiRes.send(dbResponse);
+        return;
+      }
+    }
+  
+    apiRes.send("cant fetch details");
+  };
+  
+  const handleCancelBooking = async (apiReq, apiRes) => {
+    const { username, bookingId } = apiReq.params;
+  
+    if (username?.length && bookingId?.length) {
+      const filter = {
+        _id: new ObjectId(bookingId),
+      };
+      const update = { isCancelled: true };
+      const dbResponse = await BookingModel.findOneAndUpdate(filter, update);
+  
+      if (dbResponse) {
+        apiRes.send("Cancelled Success");
+        return;
+      }
+    }
+    apiRes.send("Cancelled Failed");
+  };
+  
+
+
+  const handledBookedSlots = async (apiReq, apiRes) => {
+    const { restaurentId, selectedDate } = apiReq.params;
+    console.log(apiReq.params)
+    const dbResponse = await BookingModel.find({
+      restaurentId,
+      selectedDate,
+    });
+    console.log(dbResponse);
+    if (dbResponse?.length) {
+      const slots = dbResponse.map((res) => res.selectedTime);
+    
+      apiRes.send(slots);
+    }
+  };
+
+module.exports = { handleRegistration ,  handleLogin ,handleCreateBooking , handledBookedSlots ,handleMyBookings ,handleCancelBooking};
 
